@@ -149,11 +149,11 @@ public class Simulator implements Observer {
         // TODO: Make this configurable, of course.
         File romImage = new File("rom.bin");
         if (romImage.canRead()) {
-            logger.info("Loading ROM image from file " + romImage);
+            logger.info("正在从文件中加载 ROM 镜像:" + romImage);
             this.rom = Memory.makeROM(ROM_BASE, ROM_SIZE, romImage);
         } else {
-            logger.info("Default ROM file " + romImage +
-                        " not found, loading empty R/W memory image.");
+            logger.info("默认 ROM 文件 " + romImage +
+                        " 未找到, 正在加载空的 R/W 内存镜像.");
             this.rom = Memory.makeRAM(ROM_BASE, ROM_SIZE);
         }
         bus.addDevice(rom);
@@ -164,8 +164,8 @@ public class Simulator implements Observer {
      */
     public void createAndShowUi() {
         mainWindow = new JFrame();
-        mainWindow.setTitle("Symon 6502 Simulator");
-        mainWindow.setResizable(false);
+        mainWindow.setTitle("Symon 6502 模拟器");
+        mainWindow.setResizable(true);
         mainWindow.getContentPane().setLayout(new BorderLayout());
 
         // UI components used for I/O.
@@ -185,9 +185,9 @@ public class Simulator implements Observer {
         consoleContainer.setBorder(new EmptyBorder(10, 10, 10, 0));
         buttonContainer.setLayout(new FlowLayout());
 
-        runStopButton = new JButton("Run");
-        stepButton = new JButton("Step");
-        resetButton = new JButton("Reset");
+        runStopButton = new JButton("运行");
+        stepButton = new JButton("单步执行");
+        resetButton = new JButton("重置");
 
         buttonContainer.add(runStopButton);
         buttonContainer.add(stepButton);
@@ -270,7 +270,7 @@ public class Simulator implements Observer {
         }
 
         try {
-            logger.log(Level.INFO, "Cold reset requested. Resetting CPU and clearing memory.");
+            logger.log(Level.INFO, "冷重置请求. 正在重置 CPU ， 正在清空内存.");
             // Reset and clear memory
             cpu.reset();
             ram.fill(0x00);
@@ -286,7 +286,7 @@ public class Simulator implements Observer {
                 }
             });
         } catch (MemoryAccessException ex) {
-            logger.log(Level.SEVERE, "Exception during simulator reset: " + ex.getMessage());
+            logger.log(Level.SEVERE, "模拟器重置异常: " + ex.getMessage());
         }
     }
 
@@ -305,7 +305,7 @@ public class Simulator implements Observer {
                 }
             });
         } catch (SymonException ex) {
-            logger.log(Level.SEVERE, "Exception during simulator step: " + ex.getMessage());
+            logger.log(Level.SEVERE, "模拟器单步调试异常: " + ex.getMessage());
             ex.printStackTrace();
         }
     }
@@ -435,7 +435,7 @@ public class Simulator implements Observer {
         }
 
         public void run() {
-            logger.log(Level.INFO, "Starting main run loop.");
+            logger.log(Level.INFO, "主线程开始循环.");
             isRunning = true;
 
             SwingUtilities.invokeLater(new Runnable() {
@@ -446,7 +446,7 @@ public class Simulator implements Observer {
                     stepButton.setEnabled(false);
                     menuBar.simulatorDidStart();
                     // Toggle the state of the run button
-                    runStopButton.setText("Stop");
+                    runStopButton.setText("停止");
                 }
             });
 
@@ -455,14 +455,14 @@ public class Simulator implements Observer {
                     step();
                 } while (shouldContinue());
             } catch (SymonException ex) {
-                logger.log(Level.SEVERE, "Exception in main simulator run thread. Exiting run.");
+                logger.log(Level.SEVERE, "模拟器主线程运行异常. 退出运行.");
                 ex.printStackTrace();
             }
 
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
                     statusPane.updateState(cpu);
-                    runStopButton.setText("Run");
+                    runStopButton.setText("运行");
                     stepButton.setEnabled(true);
                     if (traceLog.isVisible()) {
                         traceLog.refresh();
@@ -488,8 +488,8 @@ public class Simulator implements Observer {
 
     class LoadProgramAction extends AbstractAction {
         public LoadProgramAction() {
-            super("Load Program...", null);
-            putValue(SHORT_DESCRIPTION, "Load a program into memory");
+            super("加载程序...", null);
+            putValue(SHORT_DESCRIPTION, "将Program加载到内存中");
             putValue(MNEMONIC_KEY, KeyEvent.VK_L);
         }
 
@@ -526,16 +526,16 @@ public class Simulator implements Observer {
                     }
                 }
             } catch (IOException ex) {
-                logger.log(Level.SEVERE, "Unable to read program file: " + ex.getMessage());
+                logger.log(Level.SEVERE, "不能够读取Program文件: " + ex.getMessage());
             } catch (MemoryAccessException ex) {
-                logger.log(Level.SEVERE, "Memory access error loading program: " + ex.getMessage());
+                logger.log(Level.SEVERE, "加载Program时内存交互异常: " + ex.getMessage());
             }
         }
     }
 
     class LoadRomAction extends AbstractAction {
         public LoadRomAction() {
-            super("Load ROM...", null);
+            super("加载 ROM...", null);
             putValue(SHORT_DESCRIPTION, "Load a ROM image");
             putValue(MNEMONIC_KEY, KeyEvent.VK_R);
         }
@@ -550,7 +550,7 @@ public class Simulator implements Observer {
                         long fileSize = romFile.length();
 
                         if (fileSize != ROM_SIZE) {
-                            throw new IOException("ROM file must be exactly " + String.valueOf(ROM_SIZE) + " bytes.");
+                            throw new IOException("ROM 文件 必须是 " + ROM_SIZE + " bytes.");
                         } else {
                             if (rom != null) {
                                 // Unload the existing ROM image.
@@ -563,17 +563,17 @@ public class Simulator implements Observer {
                             // Now, reset
                             cpu.reset();
 
-                            logger.log(Level.INFO, "ROM File `" + romFile.getName() + "' loaded at " +
+                            logger.log(Level.INFO, "ROM 文件 `" + romFile.getName() + "' 加载到 " +
                                                    String.format("0x%04X", ROM_BASE));
                         }
                     }
                 }
             } catch (IOException ex) {
-                logger.log(Level.SEVERE, "Unable to read ROM file: " + ex.getMessage());
+                logger.log(Level.SEVERE, "不能够读取 ROM 文件: " + ex.getMessage());
             } catch (MemoryRangeException ex) {
-                logger.log(Level.SEVERE, "Memory range error while loading ROM file: " + ex.getMessage());
+                logger.log(Level.SEVERE, "读取 ROM 文件时,内存范围错误: " + ex.getMessage());
             } catch (MemoryAccessException ex) {
-                logger.log(Level.SEVERE, "Memory access error while loading ROM file: " + ex.getMessage());
+                logger.log(Level.SEVERE, "读取 ROM 文件时,内存交互异常: " + ex.getMessage());
             }
         }
     }
@@ -592,8 +592,8 @@ public class Simulator implements Observer {
 
     class QuitAction extends AbstractAction {
         public QuitAction() {
-            super("Quit", null);
-            putValue(SHORT_DESCRIPTION, "Exit the Simulator");
+            super("退出", null);
+            putValue(SHORT_DESCRIPTION, "退出模拟器");
             putValue(MNEMONIC_KEY, KeyEvent.VK_Q);
         }
 
@@ -627,8 +627,8 @@ public class Simulator implements Observer {
 
     class ToggleTraceWindowAction extends AbstractAction {
         public ToggleTraceWindowAction() {
-            super("Trace Log", null);
-            putValue(SHORT_DESCRIPTION, "Show or Hide the Trace Log Window");
+            super("Trace 日志", null);
+            putValue(SHORT_DESCRIPTION, "展示或者隐藏 Trace 日志窗口");
         }
 
         public void actionPerformed(ActionEvent actionEvent) {
@@ -645,8 +645,8 @@ public class Simulator implements Observer {
 
     class ToggleMemoryWindowAction extends AbstractAction {
         public ToggleMemoryWindowAction() {
-            super("Memory Window", null);
-            putValue(SHORT_DESCRIPTION, "Show or Hide the Memory Window");
+            super("内存窗口", null);
+            putValue(SHORT_DESCRIPTION, "展示或者隐藏 Memory 日志窗口");
         }
 
         public void actionPerformed(ActionEvent actionEvent) {
@@ -693,7 +693,7 @@ public class Simulator implements Observer {
              * File Menu
              */
 
-            JMenu fileMenu = new JMenu("File");
+            JMenu fileMenu = new JMenu("文件");
 
             loadProgramItem = new JMenuItem(new LoadProgramAction());
             loadRomItem = new JMenuItem(new LoadRomAction());
@@ -711,8 +711,8 @@ public class Simulator implements Observer {
              * View Menu
              */
 
-            JMenu viewMenu = new JMenu("View");
-            JMenu fontSubMenu = new JMenu("Console Font Size");
+            JMenu viewMenu = new JMenu("查看");
+            JMenu fontSubMenu = new JMenu("控制台字体大小");
             ButtonGroup fontSizeGroup = new ButtonGroup();
             makeFontSizeMenuItem(10, fontSubMenu, fontSizeGroup);
             makeFontSizeMenuItem(11, fontSubMenu, fontSizeGroup);
